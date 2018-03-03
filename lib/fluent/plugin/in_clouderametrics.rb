@@ -54,7 +54,15 @@ module Fluent
 
             body = get_cloudera_metrics
             
-            router.emit @tag, Fluent::Engine.now, body
+            metrics = JSON.load(body)
+
+            if metrics.key?("items")
+              metrics["items"].each do |item|
+                router.emit @tag, Fluent::Engine.now, item
+              end
+            else
+              router.emit @tag, Fluent::Engine.now, metrics
+            end
 
             @next_fetch_time += @timespan
             sleep @timespan
